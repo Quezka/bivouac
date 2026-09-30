@@ -64,8 +64,9 @@ def domain_types_in(hint) -> set[str]:
 def test_use_cases_neither_take_nor_return_domain_entities():
     from bivouac.application.library import LibraryService
     from bivouac.application.study import StudyService
+    from bivouac.application.updates import UpdateService
     leaks = []
-    for cls in (LibraryService, StudyService):
+    for cls in (LibraryService, StudyService, UpdateService):
         for name, method in inspect.getmembers(cls, inspect.isfunction):
             if name.startswith("_"):
                 continue

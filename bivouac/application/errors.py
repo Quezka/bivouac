@@ -19,3 +19,7 @@ class FileAccessError(ApplicationError):
 
 class InvalidInput(ApplicationError):
     pass
+
+
+class UpdateError(ApplicationError):
+    """Checking for, downloading or installing a new version didn't work."""

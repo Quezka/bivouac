@@ -1,24 +1,31 @@
 import random
-from datetime import date
+from datetime import date, datetime
 
 import pytest
 
 from bivouac.application.library import LibraryService
 from bivouac.application.services import Services
 from bivouac.application.study import StudyService
+from bivouac.application.updates import UpdateService
 from bivouac.infrastructure.packs import JsonPackStore
 from bivouac.infrastructure.progress import SqliteProgress
 from bivouac.infrastructure.settings import MemorySettings
 
-from .fakes import FakeManuals, sample_pack_dict
+from .fakes import FakeInstaller, FakeManuals, FakeReleases, sample_pack_dict
 
 
 class Clock:
+    """Today's date for studying; called, the time of day for update checks."""
+
     def __init__(self):
         self.day = date(2026, 10, 1)
+        self.now = datetime(2026, 10, 1, 10, 0)
 
     def today(self):
         return self.day
+
+    def __call__(self):
+        return self.now
 
 
 @pytest.fixture
@@ -27,13 +34,24 @@ def clock():
 
 
 @pytest.fixture
-def services(tmp_path, clock):
+def releases():
+    return FakeReleases()
+
+
+@pytest.fixture
+def installer():
+    return FakeInstaller()
+
+
+@pytest.fixture
+def services(tmp_path, clock, releases, installer):
     packs = JsonPackStore(tmp_path / "packs")
     progress = SqliteProgress(":memory:")
     settings = MemorySettings()
     return Services(
         library=LibraryService(packs, FakeManuals(), progress, settings),
         study=StudyService(packs, progress, clock, settings, random.Random(7)),
+        updates=UpdateService(releases, installer, settings, "0.1.0", clock),
     )
 
 

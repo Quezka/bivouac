@@ -136,7 +136,7 @@ class CardDialog(QDialog):
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, services: Services, parent=None):
+    def __init__(self, services: Services, updater=None, parent=None):
         super().__init__(parent)
         self.services = services
         self.setWindowTitle("Settings")
@@ -157,6 +157,21 @@ class SettingsDialog(QDialog):
         col.addWidget(label("Fewer new cards means fewer reviews later. Around 20 a day "
                             "gets through the Cybearly manual in about three weeks.",
                             "hint", wrap=True))
+
+        col.addWidget(QLabel("UPDATES", objectName="tileCaption"))
+        auto = QCheckBox("Check for updates automatically")
+        auto.setChecked(services.updates.auto_check())
+        auto.toggled.connect(services.updates.set_auto_check)
+        check = button("Check now")
+        check.setEnabled(updater is not None)
+        if updater is not None:
+            check.clicked.connect(lambda: updater.check_now())
+        row = QHBoxLayout()
+        row.addWidget(auto)
+        row.addStretch()
+        row.addWidget(check)
+        col.addLayout(row)
+        col.addWidget(label(f"You have version {services.updates.current_version}.", "hint"))
 
         col.addWidget(QLabel("SCHOOL", objectName="tileCaption"))
         brand = services.library.branding()

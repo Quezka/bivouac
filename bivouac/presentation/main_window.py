@@ -18,6 +18,7 @@ from .icons import APP_ICON, SCHOOL_EMBLEM
 from .views.chapters import ChaptersView
 from .views.overview import OverviewView
 from .views.practice import PracticeView
+from .updates_ui import UpdateChecker
 from .views.reference import CheatsheetView, GlossaryView, ManualView
 
 
@@ -129,6 +130,7 @@ class MainWindow(QMainWindow):
             self._shortcut(f"Ctrl+{i + 1}", lambda i=i: self.show_page(i))
         self.sidebar.group.idClicked.connect(self.show_page)
         self.sidebar.set_branding(services.library.branding())
+        self.updater = UpdateChecker(services, self)  # not `update`: that's QWidget's
 
         more = self.sidebar.nav_button("more", "More", checkable=False)
         more.setPopupMode(QToolButton.InstantPopup)
@@ -320,6 +322,7 @@ class MainWindow(QMainWindow):
             ("Delete pack…", None, self.delete_pack, True),
             None,
             ("Settings…", "Ctrl+,", self.open_settings, False),
+            ("Check for updates…", None, lambda: self.updater.check_now(), False),
             ("Keyboard shortcuts", None, self.show_shortcuts, False),
             (f"About {APP_NAME}", None, lambda: AboutDialog(self.services, self).exec(), False),
             None,
@@ -340,7 +343,7 @@ class MainWindow(QMainWindow):
         return menu
 
     def open_settings(self):
-        if SettingsDialog(self.services, self).exec():
+        if SettingsDialog(self.services, self.updater, self).exec():
             self.sidebar.set_branding(self.services.library.branding())
             self.load_pack()
 

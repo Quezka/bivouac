@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.0] - 2026-09-30
+
+- Updates from inside the app: Bivouac checks GitHub about once a day and installs a new version for you (the .deb asks for your password; the Windows setup runs silently and restarts Bivouac). Switch it off or check now in Settings, or use More → Check for updates.
+
 ## [0.1.0] - 2026-09-30
 
 First version.
