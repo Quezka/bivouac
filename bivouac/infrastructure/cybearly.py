@@ -220,9 +220,9 @@ def _cheatsheet(lines: list[str]) -> list[dict]:
             continue
         indent = len(line) - len(line.lstrip())
         m = re.match(r"^A\.\d+: (.+)$", stripped)
-        if m and indent < base + 8:
+        if m and indent <= base + 2:
             section = m.group(1)
-        elif indent < base + 8:
+        elif indent <= base + 2:
             if groups and groups[-1]["section"] == section and not groups[-1]["lines"]:
                 groups[-1]["title"] = _join([groups[-1]["title"], stripped])
             else:

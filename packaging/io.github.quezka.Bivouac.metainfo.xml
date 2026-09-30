@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata: what Ubuntu App Center / GNOME Software show about Bivouac. -->
+<component type="desktop-application">
+  <id>io.github.quezka.Bivouac</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <name>Bivouac</name>
+  <summary>Base camp for CTF study</summary>
+  <developer id="io.github.quezka">
+    <name>Quezka</name>
+  </developer>
+
+  <description>
+    <p>
+      Bivouac turns cybersecurity competition material into something you can practise
+      with every day, until the competition.
+    </p>
+    <ul>
+      <li>Study packs, one per competition: import a Cybearly "Campo base" manual, open a
+          pack file, or start an empty pack and write your own cards</li>
+      <li>Chapter recaps, key-concept tables and self-check questions</li>
+      <li>Spaced-repetition flashcards that make sure every card comes back before the
+          competition day, and a multiple-choice drill</li>
+      <li>A searchable glossary and command cheatsheet, and the manual itself, opened at
+          the right page</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">io.github.quezka.Bivouac.desktop</launchable>
+  <provides>
+    <binary>bivouac</binary>
+  </provides>
+
+  <url type="homepage">https://github.com/Quezka/bivouac</url>
+  <url type="bugtracker">https://github.com/Quezka/bivouac/issues</url>
+
+  <categories>
+    <category>Education</category>
+  </categories>
+  <keywords>
+    <keyword>CTF</keyword>
+    <keyword>cybersecurity</keyword>
+    <keyword>flashcards</keyword>
+    <keyword>study</keyword>
+    <keyword>quiz</keyword>
+  </keywords>
+
+  <content_rating type="oars-1.1"/>
+  <branding>
+    <color type="primary" scheme_preference="light">#e2ecfd</color>
+    <color type="primary" scheme_preference="dark">#0a2a9c</color>
+  </branding>
+
+  <!-- Newest first. Every released version needs an entry; tests enforce it. -->
+  <releases>
+    <release version="0.1.0" date="2026-09-30">
+      <description>
+        <p>First release: study packs, chapter recaps, spaced-repetition flashcards,
+          multiple-choice drill, glossary, cheatsheet and the manual in a built-in reader.</p>
+      </description>
+    </release>
+  </releases>
+</component>

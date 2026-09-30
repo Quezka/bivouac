@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 from ..application.errors import FileAccessError, FileFormatError
@@ -12,13 +13,20 @@ from .cybearly import parse_manual
 from .packs import pack_from_dict
 
 
+def find_pdftotext() -> str | None:
+    """poppler's pdftotext: bundled with the Windows build, a system package elsewhere."""
+    bundled = Path(getattr(sys, "_MEIPASS", Path(__file__).parent)) / "poppler" / "pdftotext.exe"
+    return str(bundled) if bundled.is_file() else shutil.which("pdftotext")
+
+
 def pdf_text(path: str) -> str:
-    tool = shutil.which("pdftotext")
+    tool = find_pdftotext()
     if tool is None:
         raise FileAccessError("Reading PDFs needs pdftotext (install the poppler-utils package).")
     try:
         done = subprocess.run([tool, "-layout", "-enc", "UTF-8", path, "-"], capture_output=True,
-                              timeout=180, check=False)
+                              timeout=180, check=False,
+                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except (OSError, subprocess.TimeoutExpired) as e:
         raise FileAccessError(f"{Path(path).name} couldn't be read: {e}") from None
     if done.returncode != 0:
