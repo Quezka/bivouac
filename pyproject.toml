@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bivouac"
+dynamic = ["version"]
+description = "Base camp for CTF study: chapters, flashcards, drills and cheatsheets"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = ["PySide6>=6.6"]
+
+[project.gui-scripts]
+bivouac = "bivouac.app:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "bivouac.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["bivouac*"]
+
+[tool.setuptools.package-data]
+bivouac = ["assets/*"]

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Bivouac
+GenericName=CTF Study
+Comment=Base camp for CTF study: chapters, flashcards, drills and cheatsheets
+Exec=bivouac
+Icon=io.github.quezka.Bivouac
+Terminal=false
+Categories=Education;Security;
+Keywords=ctf;cybersecurity;flashcards;study;quiz;cybearly;olicyber;
