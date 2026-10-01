@@ -11,7 +11,8 @@ from .library import pack_record
 from .ports import Clock, KeyValueStore, PackStore, ProgressStore
 from .records import (
     ChapterProgress, ChapterRecord, CardRecord, CheatRecord, ChoiceRecord, ConceptRecord,
-    OverviewRecord, QuestionRecord, ScopeRecord, SectionRecord, TermRecord,
+    DigestChapter, DigestRecord, OverviewRecord, QuestionRecord, ScopeRecord, SectionRecord,
+    TermRecord,
 )
 from .types import SCOPE_ALL, SCOPE_CHAPTER, SCOPE_GLOSSARY
 
@@ -120,6 +121,28 @@ class StudyService:
         if found is None:
             raise NotFound(f"There's no chapter {chapter_id}.")
         return found
+
+    def digest(self, pack_id: str, query: str = "") -> DigestRecord:
+        """Every chapter's takeaways and key terms in one skimmable list.
+
+        A search keeps a whole chapter when its title matches, otherwise only the
+        takeaways and terms that do (and drops chapters left with nothing)."""
+        pack = self._load(pack_id)
+        read = self._progress.read_chapters(pack_id)
+        found = []
+        for c in pack.chapters:
+            takeaways, concepts = c.summary, c.concepts
+            if query.strip() and not _matches(query, c.id, c.title, c.part):
+                takeaways = tuple(t for t in takeaways if _matches(query, t))
+                concepts = tuple(k for k in concepts if _matches(query, k.term, k.meaning,
+                                                                 k.example))
+            if takeaways or concepts:
+                found.append(DigestChapter(
+                    c.id, c.title, c.part, c.page, takeaways,
+                    tuple(ConceptRecord(k.term, k.meaning, k.example) for k in concepts),
+                    c.id in read))
+        return DigestRecord(tuple(found), sum(1 for c in pack.chapters if c.summary or c.concepts),
+                            sum(len(c.concepts) for c in pack.chapters))
 
     def set_read(self, pack_id: str, chapter_id: str, read: bool) -> None:
         if self._load(pack_id).chapter(chapter_id) is None:

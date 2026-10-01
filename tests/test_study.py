@@ -137,3 +137,25 @@ def test_branding_defaults_to_the_school(services):
 def test_scopes(services, pack):
     keys = [s.key for s in services.study.scopes(pack.id)]
     assert keys == [SCOPE_ALL, SCOPE_GLOSSARY, "ch:1", "ch:2"]
+
+
+def test_digest_lists_every_chapter(services, pack):
+    digest = services.study.digest(pack.id)
+    assert [c.id for c in digest.chapters] == ["1", "2"]
+    assert digest.total_chapters == 2 and digest.total_concepts == 5
+    assert digest.chapters[0].takeaways == ("XOR is its own inverse.",)
+
+
+def test_digest_search_keeps_matching_bits(services, pack):
+    only_xss = services.study.digest(pack.id, "script injected").chapters
+    assert [(c.id, [k.term for k in c.concepts]) for c in only_xss] == [("2", ["XSS"])]
+    by_takeaway = services.study.digest(pack.id, "inverse").chapters
+    assert [c.id for c in by_takeaway] == ["1"] and by_takeaway[0].concepts == ()
+    whole = services.study.digest(pack.id, "crypto").chapters
+    assert len(whole[0].concepts) == 3  # the title matches: the chapter stays whole
+    assert services.study.digest(pack.id, "nothing like this").chapters == ()
+
+
+def test_digest_shows_what_is_read(services, pack):
+    services.study.set_read(pack.id, "2", True)
+    assert [c.read for c in services.study.digest(pack.id).chapters] == [False, True]

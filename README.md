@@ -44,7 +44,7 @@ time left, so every card comes round again before the day. New cards are capped 
 
 | | |
 |---|---|
-| Ctrl+1 … Ctrl+6 | Overview, Chapters, Practice, Glossary, Cheatsheet, Manual |
+| Ctrl+1 … Ctrl+7 | Overview, Chapters, Digest, Practice, Glossary, Cheatsheet, Manual |
 | Space | Show answer / next question |
 | 1 2 3 4 | Again · Hard · Good · Easy — or pick an option |
 | R · P · O | Chapter: mark read · practise · open in manual |

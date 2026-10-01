@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.0] - 2026-10-01
+
+- Digest: a new page (Ctrl+3) that boils the whole manual down to each chapter's takeaways and key terms, in one list to scroll through. Show everything, only the takeaways or only the key terms, search across all chapters, and jump to a chapter or to its page in the manual. Practice, Glossary, Cheatsheet and Manual move one place down (Ctrl+4 to Ctrl+7).
+
 ## [0.2.0] - 2026-09-30
 
 - Updates from inside the app: Bivouac checks GitHub about once a day and installs a new version for you (the .deb asks for your password; the Windows setup runs silently and restarts Bivouac). Switch it off or check now in Settings, or use More → Check for updates.

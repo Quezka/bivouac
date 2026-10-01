@@ -133,3 +133,22 @@ class CheatRecord:
     section: str
     title: str
     lines: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class DigestChapter:
+    """One chapter boiled down for skimming: what to take away and the terms to know."""
+    id: str
+    title: str
+    part: str
+    page: int | None
+    takeaways: tuple[str, ...]
+    concepts: tuple[ConceptRecord, ...]
+    read: bool
+
+
+@dataclass(frozen=True)
+class DigestRecord:
+    chapters: tuple[DigestChapter, ...]
+    total_chapters: int  # before searching
+    total_concepts: int

@@ -16,6 +16,7 @@ from .common import confirm, error, logo_tile
 from .dialogs import AboutDialog, CardDialog, PackDialog, SettingsDialog
 from .icons import APP_ICON, SCHOOL_EMBLEM
 from .views.chapters import ChaptersView
+from .views.digest import DigestView
 from .views.overview import OverviewView
 from .views.practice import PracticeView
 from .updates_ui import UpdateChecker
@@ -101,8 +102,10 @@ class Sidebar(QFrame):
 
 
 class MainWindow(QMainWindow):
-    PAGES = [("home", "Overview"), ("book", "Chapters"), ("cards", "Practice"),
-             ("file-text", "Glossary"), ("terminal", "Cheatsheet"), ("layers", "Manual")]
+    PAGES = [("home", "Overview"), ("book", "Chapters"), ("list", "Digest"),
+             ("cards", "Practice"), ("file-text", "Glossary"), ("terminal", "Cheatsheet"),
+             ("layers", "Manual")]
+    CHAPTERS, DIGEST, PRACTICE, MANUAL = 1, 2, 3, 6
 
     def __init__(self, services: Services):
         super().__init__()
@@ -114,11 +117,12 @@ class MainWindow(QMainWindow):
 
         self.overview = OverviewView(services)
         self.chapters = ChaptersView(services)
+        self.digest = DigestView(services)
         self.practice = PracticeView(services)
         self.glossary = GlossaryView(services)
         self.cheatsheet = CheatsheetView(services)
         self.manual = ManualView(services)
-        self.pages = [self.overview, self.chapters, self.practice, self.glossary,
+        self.pages = [self.overview, self.chapters, self.digest, self.practice, self.glossary,
                       self.cheatsheet, self.manual]
 
         self.sidebar = Sidebar()
@@ -145,13 +149,15 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.stack, 1)
         self.setCentralWidget(central)
 
-        self.overview.studyRequested.connect(lambda: self.show_page(2))
+        self.overview.studyRequested.connect(lambda: self.show_page(self.PRACTICE))
         self.overview.chapterRequested.connect(self.open_chapter)
         self.overview.importRequested.connect(self.import_file)
         self.overview.newPackRequested.connect(self.new_pack)
         self.overview.editPackRequested.connect(self.edit_pack)
         self.chapters.practiseRequested.connect(self.practise_chapter)
         self.chapters.openPage.connect(self.open_manual)
+        self.digest.chapterRequested.connect(self.open_chapter)
+        self.digest.openPage.connect(self.open_manual)
         self.practice.addCardRequested.connect(self.add_card)
         self.practice.changed.connect(self._dirty_counts)
 
@@ -170,7 +176,7 @@ class MainWindow(QMainWindow):
         self.sidebar.pack_button.setMenu(self._pack_menu())
         for i in range(1, len(self.pages)):
             self.nav_buttons[i].setEnabled(pack is not None)
-        self.nav_buttons[5].setVisible(bool(pack and pack.has_source))
+        self.nav_buttons[self.MANUAL].setVisible(bool(pack and pack.has_source))
         for page in self.pages:
             page.set_pack(self.pack_id)
         self.setWindowTitle(f"{pack.title} — {APP_NAME}" if pack else APP_NAME)
@@ -220,7 +226,7 @@ class MainWindow(QMainWindow):
         dialog = PackDialog(self.services, parent=self)
         if dialog.exec():
             self.load_pack()
-            self.show_page(2)
+            self.show_page(self.PRACTICE)
 
     def edit_pack(self):
         pack = self.services.library.active()
@@ -272,13 +278,15 @@ class MainWindow(QMainWindow):
     # ---- navigation ---------------------------------------------------------------
     def show_page(self, index: int):
         if not 0 <= index < len(self.pages) or not self.nav_buttons[index].isEnabled() \
-                or not self.nav_buttons[index].isVisible() and index == 5:
+                or not self.nav_buttons[index].isVisible() and index == self.MANUAL:
             index = 0
         self.stack.setCurrentIndex(index)
         self.nav_buttons[index].setChecked(True)
-        if index == 1:
+        if index == self.CHAPTERS:
             self.chapters.refresh()
-        elif index == 2:
+        elif index == self.DIGEST:
+            self.digest.refresh()
+        elif index == self.PRACTICE:
             if self._counts_dirty:
                 self.practice.reload_scopes()
                 self._counts_dirty = False
@@ -290,15 +298,15 @@ class MainWindow(QMainWindow):
         self._counts_dirty = True
 
     def open_chapter(self, chapter_id: str):
-        self.show_page(1)
+        self.show_page(self.CHAPTERS)
         self.chapters.select(chapter_id)
 
     def practise_chapter(self, chapter_id: str):
-        self.show_page(2)
+        self.show_page(self.PRACTICE)
         self.practice.practise(SCOPE_CHAPTER + chapter_id)
 
     def open_manual(self, page: int):
-        self.show_page(5)
+        self.show_page(self.MANUAL)
         self.manual.go(page)
 
     def _shortcut(self, keys, slot):
@@ -349,7 +357,7 @@ class MainWindow(QMainWindow):
 
     def show_shortcuts(self):
         QMessageBox.information(self, "Keyboard shortcuts", "\n".join([
-            "Ctrl+1 … Ctrl+6\tSwitch page",
+            "Ctrl+1 … Ctrl+7\tSwitch page",
             "Ctrl+O\tImport a manual or pack",
             "Ctrl+E\tEdit pack details",
             "Ctrl+Shift+N\tAdd a card",
