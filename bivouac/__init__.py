@@ -2,7 +2,7 @@
 
 Release metadata below is the single source for packaging and the About dialog.
 """
-__version__ = "0.4.1"
+__version__ = "0.5.0"
 
 APP_NAME = "Bivouac"
 APP_ID = "io.github.quezka.Bivouac"

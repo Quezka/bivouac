@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QApplication
 
 from .. import APP_ID, APP_NAME
 from ..application.services import Services
-from . import theme, uiscale
+from . import leave_on_enter, theme, uiscale
 from .icons import APP_ICON
 
 
@@ -18,6 +18,7 @@ def create_application(argv: list[str]) -> QApplication:
         uiscale.apply_before_app()  # Qt reads the scale factor once, as the app is created
     app = QApplication.instance() or QApplication(argv)
     app.setStyle("Fusion")
+    leave_on_enter.install(app)  # Enter in a one-line box lets go of it
     app.setWindowIcon(QIcon(str(APP_ICON)))
     theme.install(app)
     return app
