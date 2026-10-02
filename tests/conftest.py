@@ -1,7 +1,10 @@
+import os
 import random
 from datetime import date, datetime
 
 import pytest
+
+os.environ.setdefault("QT_SCALE_FACTOR", "1")  # tests measure pixels: no automatic scaling
 
 from bivouac.application.library import LibraryService
 from bivouac.application.services import Services
@@ -79,3 +82,15 @@ def empty_clipboard():
     app = QApplication.instance()
     if app is not None:
         app.clipboard().clear()
+
+
+@pytest.fixture(autouse=True)
+def full_hd_screen(monkeypatch):
+    """The headless test screen is tiny; windows are clamped to the screen, so pretend it is
+    a normal one (the clamp itself is tested in test_uiscale)."""
+    try:
+        from PySide6.QtCore import QRect
+        from bivouac.presentation import fit
+    except ImportError:
+        return
+    monkeypatch.setattr(fit, "available", lambda widget=None: QRect(0, 0, 1920, 1040))

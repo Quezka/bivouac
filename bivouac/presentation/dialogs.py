@@ -14,7 +14,9 @@ from .. import APP_NAME, HOMEPAGE, __version__
 from ..application.errors import ApplicationError
 from ..application.inputs import BrandingInput, CardInput, PackInput
 from ..application.services import Services
-from . import theme
+from . import theme, uiscale
+from .background import restart_app
+from .fit import scrollable
 from .common import Segmented, button, error, label, logo_tile
 from .icons import APP_ICON, SCHOOL_EMBLEM
 
@@ -68,6 +70,7 @@ class PackDialog(QDialog):
                             "flashcard schedule makes sure every card comes back before the day.",
                             "hint", wrap=True))
         col.addWidget(_buttons(self, "Save" if pack else "Create"))
+        scrollable(self)
         if pack:
             self.name.setText(pack.title)
             self.event.setText(pack.event)
@@ -119,6 +122,7 @@ class CardDialog(QDialog):
         col.addLayout(row)
         col.addWidget(self.again)
         col.addWidget(_buttons(self, "Add"))
+        scrollable(self)
 
     def accept(self):
         try:
@@ -158,6 +162,20 @@ class SettingsDialog(QDialog):
                             "gets through the Cybearly manual in about three weeks.",
                             "hint", wrap=True))
 
+        col.addWidget(QLabel("INTERFACE SIZE", objectName="tileCaption"))
+        self.scale = QComboBox()
+        for choice in uiscale.CHOICES:
+            self.scale.addItem("Automatic" if choice == "auto" else f"{choice}%", choice)
+        self.scale.setCurrentIndex(max(0, self.scale.findData(uiscale.chosen())))
+        self.scale.currentIndexChanged.connect(self._scale_changed)
+        col.addWidget(self.scale)
+        col.addWidget(label("Applies after a restart. Automatic makes everything a little "
+                            "smaller on small screens.", "hint", wrap=True))
+        self.restart = button("Restart Bivouac now")
+        self.restart.hide()
+        self.restart.clicked.connect(self._restart)
+        col.addWidget(self.restart)
+
         col.addWidget(QLabel("UPDATES", objectName="tileCaption"))
         auto = QCheckBox("Check for updates automatically")
         auto.setChecked(services.updates.auto_check())
@@ -195,6 +213,15 @@ class SettingsDialog(QDialog):
         form.addRow("Logo", logo_row)
         col.addLayout(form)
         col.addWidget(_buttons(self))
+        scrollable(self)
+
+    def _scale_changed(self):
+        uiscale.set_chosen(self.scale.currentData())
+        self.restart.show()
+
+    def _restart(self):
+        self.accept()
+        restart_app()
 
     def _preview(self):
         self.preview.setPixmap(logo_tile(self.logo or str(SCHOOL_EMBLEM), str(SCHOOL_EMBLEM), 38,

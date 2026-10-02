@@ -26,6 +26,21 @@ def window(app, services):
     pump()
     yield w
     w.close()
+    w.deleteLater()
+    pump()
+
+
+def press(widget, key):
+    """A key press the way a user's reaches the widget: it has the focus first (shortcuts
+    only fire for the focused widget's window on newer Qt)."""
+    from PySide6.QtWidgets import QApplication
+    widget.window().activateWindow()
+    widget.setFocus()
+    for _attempt in range(40):  # focus follows the next event loop turns, not instantly
+        if QApplication.focusWidget() is widget and QApplication.activeWindow() is widget.window():
+            break
+        QTest.qWait(25)
+    QTest.keyClick(widget.window(), key)
 
 
 def pump(ms=30):
@@ -56,13 +71,13 @@ def test_flashcards_from_the_keyboard(window, services, pack):
     window.show_page(window.PRACTICE)
     flash = window.practice.flash
     first = flash.queue[0]
-    QTest.keyClick(flash, Qt.Key_Space)
+    press(flash, Qt.Key_Space)
     assert flash.revealed and flash.back.isVisibleTo(flash)
-    QTest.keyClick(flash, Qt.Key_3)
+    press(flash, Qt.Key_3)
     assert flash.done == 1 and flash.queue[0].id != first.id
     assert services.study.overview(pack.id).seen == 1
-    QTest.keyClick(flash, Qt.Key_Space)
-    QTest.keyClick(flash, Qt.Key_1)  # again: stays in the session
+    press(flash, Qt.Key_Space)
+    press(flash, Qt.Key_1)  # again: stays in the session
     assert flash.done == 1 and any(c.id for c in flash.queue)
 
 
@@ -76,7 +91,7 @@ def test_multiple_choice_marks_right_and_wrong(window, pack):
     choice.pick(q.answer)
     assert choice.buttons[q.answer].objectName() == "optionRight"
     assert choice.right == 1
-    QTest.keyClick(choice, Qt.Key_Space)
+    press(choice, Qt.Key_Space)
     assert not choice.answered
 
 

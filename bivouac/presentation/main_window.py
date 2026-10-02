@@ -11,6 +11,7 @@ from .. import APP_NAME
 from ..application.errors import ApplicationError
 from ..application.services import Services
 from ..application.types import SCOPE_CHAPTER
+from .fit import clamp_window
 from . import theme
 from .common import confirm, error, logo_tile
 from .dialogs import AboutDialog, CardDialog, PackDialog, SettingsDialog
@@ -112,8 +113,7 @@ class MainWindow(QMainWindow):
         self.services = services
         self.pack_id: str | None = None
         self.setWindowTitle(APP_NAME)
-        self.resize(1240, 820)
-        self.setMinimumSize(980, 640)
+        clamp_window(self, 1240, 820, 980, 640)
 
         self.overview = OverviewView(services)
         self.chapters = ChaptersView(services)
