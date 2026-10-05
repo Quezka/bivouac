@@ -114,7 +114,7 @@ class LibraryService:
             raise InvalidInput("A card needs both a question and an answer.")
         pack = self._packs.load(pack_id)
         if data.chapter_id and pack.chapter(data.chapter_id) is None:
-            raise NotFound(f"There's no chapter {data.chapter_id}.")
+            raise NotFound("There's no chapter {id}.", id=data.chapter_id)
         card = CustomCard(uuid.uuid4().hex[:12], data.front.strip(), data.back.strip(),
                           data.chapter_id)
         return pack_record(self._packs.save(replace(pack, cards=pack.cards + (card,))))

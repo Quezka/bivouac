@@ -10,17 +10,13 @@ from PySide6.QtWidgets import (
 
 from ..application.errors import ApplicationError
 from ..application.services import AvailableUpdate, Services
-from .background import restart_app
-from .background import run_in_background
-
-
-def _(text: str) -> str:
-    """Bivouac's UI isn't translated yet; this keeps the strings ready for it."""
-    return text
+from .background import restart_app, run_in_background
+from .common import error_text
+from .i18n import _
 
 
 def _message(error: Exception) -> str:
-    return _(str(error)) if isinstance(error, ApplicationError) else _(
+    return error_text(error) if isinstance(error, ApplicationError) else _(
         "Something went wrong: {error}").format(error=error)
 
 

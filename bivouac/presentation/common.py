@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from . import theme
+from .i18n import _
 
 
 class Page(QWidget):
@@ -219,13 +220,22 @@ def empty_state(title: str, hint: str) -> QWidget:
     return box
 
 
-def error(parent, err: Exception, title: str = "Something went wrong"):
-    QMessageBox.warning(parent, title, str(err))
+def error_text(err: Exception) -> str:
+    """An application error's message in the user's language."""
+    template = getattr(err, "template", None)
+    if template is None:
+        return _(str(err))
+    return _(template).format(**err.values) if err.values else _(template)
 
 
-def confirm(parent, title: str, text: str, action: str = "Delete") -> bool:
+def error(parent, err: Exception, title: str | None = None):
+    """`title` and the error's message (if it's one of the fixed ones) come out translated."""
+    QMessageBox.warning(parent, title or _("Something went wrong"), error_text(err))
+
+
+def confirm(parent, title: str, text: str, action: str | None = None) -> bool:
     box = QMessageBox(QMessageBox.Warning, title, text, parent=parent)
-    ok = box.addButton(action, QMessageBox.DestructiveRole)
+    ok = box.addButton(action or _("Delete"), QMessageBox.DestructiveRole)
     box.addButton(QMessageBox.Cancel)
     box.exec()
     return box.clickedButton() is ok

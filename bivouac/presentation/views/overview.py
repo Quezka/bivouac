@@ -12,8 +12,9 @@ from ..common import (
     Card, HistoryChart, Page, StatTile, button, clear, empty_state, label, primary_button, scroll,
 )
 from ..formatting import fmt_date, short_day
+from ..i18n import N_, _, plural
 
-PART_OF_DAY = ((12, "Good morning"), (18, "Good afternoon"), (24, "Good evening"))
+PART_OF_DAY = ((12, N_("Good morning")), (18, N_("Good afternoon")), (24, N_("Good evening")))
 
 
 class ChapterRow(QPushButton):
@@ -44,8 +45,9 @@ class ChapterRow(QPushButton):
         row.addStretch()
         row.addWidget(bar)
         row.addWidget(count)
-        self.setToolTip(f"{chapter.seen} of {chapter.cards} cards seen, {chapter.known} known"
-                        + (" · read" if chapter.read else ""))
+        self.setToolTip(_("{seen} of {cards} cards seen, {known} known").format(
+            seen=chapter.seen, cards=chapter.cards, known=chapter.known)
+            + (" · " + _("read") if chapter.read else ""))
         self.setMinimumHeight(40)
 
 
@@ -60,7 +62,7 @@ class OverviewView(Page):
         super().__init__(parent)
         self.services = services
         self.pack_id: str | None = None
-        self.study = primary_button("Study now", "cards")
+        self.study = primary_button(_("Study now"), "cards")
         self.study.setShortcut("Ctrl+Return")
         self.study.clicked.connect(self.studyRequested.emit)
         self.add_actions(self.study)
@@ -83,18 +85,18 @@ class OverviewView(Page):
         clear(self.content_layout)
         brand = self.services.library.branding()
         if self.pack_id is None:
-            self.title.setText("Welcome to Bivouac")
-            self.subtitle.setText(f"Base camp for CTF study · {brand.school}")
+            self.title.setText(_("Welcome to Bivouac"))
+            self.subtitle.setText(_("Base camp for CTF study") + f" · {brand.school}")
             self.study.hide()
             box = empty_state(
-                "Pitch your first camp",
-                "Import a competition manual (the Cybearly “Campo base” PDF works as is), "
-                "open a pack a friend shared, or start an empty pack and write your own cards.")
+                _("Pitch your first camp"),
+                _("Import a competition manual (the Cybearly “Campo base” PDF works as is), "
+                  "open a pack a friend shared, or start an empty pack and write your own cards."))
             row = QHBoxLayout()
             row.addStretch()
-            imp = primary_button("Import manual or pack…", "upload")
+            imp = primary_button(_("Import manual or pack…"), "upload")
             imp.clicked.connect(self.importRequested.emit)
-            new = button("Start an empty pack…", "plus")
+            new = button(_("Start an empty pack…"), "plus")
             new.clicked.connect(self.newPackRequested.emit)
             row.addWidget(imp)
             row.addWidget(new)
@@ -106,45 +108,50 @@ class OverviewView(Page):
         o = self.services.study.overview(self.pack_id)
         from datetime import datetime
         hour = datetime.now().hour
-        greeting = next(text for limit, text in PART_OF_DAY if hour < limit)
+        greeting = _(next(text for limit, text in PART_OF_DAY if hour < limit))
         self.title.setText(o.pack.title)
         self.subtitle.setText(f"{greeting} · {brand.school}, {brand.place}")
         t = theme.current()
 
         tiles = QGridLayout()
         tiles.setSpacing(12)
-        countdown = StatTile("Competition")
+        countdown = StatTile(_("Competition"))
         if o.days_left is None:
-            countdown.show_value("—", "No date yet. Set it in Edit pack to see a countdown "
-                                      "and keep cards timed for the day.")
-            link = button("Set the date…")
+            countdown.show_value("—", _("No date yet. Set it in Edit pack to see a countdown "
+                                        "and keep cards timed for the day."))
+            link = button(_("Set the date…"))
             link.clicked.connect(self.editPackRequested.emit)
             countdown.add(link)
         elif o.days_left > 0:
             countdown.value.setObjectName("countdown")
-            countdown.show_value(f"{o.days_left} day{'s' if o.days_left != 1 else ''}",
-                                 f"to {o.pack.event or o.pack.title}, {fmt_date(o.pack.event_date)}")
+            countdown.show_value(plural(o.days_left, "day"),
+                                 _("to {event}, {date}").format(
+                                     event=o.pack.event or o.pack.title,
+                                     date=fmt_date(o.pack.event_date)))
         elif o.days_left == 0:
-            countdown.show_value("Today!", f"{o.pack.event or o.pack.title} — in bocca al lupo!",
-                                 t.flag)
+            countdown.show_value(_("Today!"), _("{event} — in bocca al lupo!").format(
+                event=o.pack.event or o.pack.title), t.flag)
         else:
-            countdown.show_value("Done", f"{o.pack.event or 'The competition'} was "
-                                         f"{fmt_date(o.pack.event_date)}")
-        work = StatTile("Today")
+            countdown.show_value(_("Done"), _("{event} was {date}").format(
+                event=o.pack.event or _("The competition"), date=fmt_date(o.pack.event_date)))
+        work = StatTile(_("Today"))
         todo = o.due + o.new
         work.show_value(str(todo) if todo else "✓",
-                        f"{o.due} to review, {o.new} new" if todo else
-                        f"All caught up · {o.reviewed_today} answers today",
+                        _("{due} to review, {new} new").format(due=o.due, new=o.new) if todo else
+                        _("All caught up · {answers} today").format(
+                            answers=plural(o.reviewed_today, "answer")),
                         None if todo else t.success)
-        known = StatTile("Known")
+        known = StatTile(_("Known"))
         pct = round(100 * o.known / o.total) if o.total else 0
-        known.show_value(f"{pct}%", f"{o.known} of {o.total} cards solid, {o.seen} seen")
+        known.show_value(f"{pct}%", _("{known} of {total} cards solid, {seen} seen").format(
+            known=o.known, total=o.total, seen=o.seen))
         bar = QProgressBar(textVisible=False, maximum=max(1, o.total))
         bar.setValue(o.known)
         known.add(bar)
-        streak = StatTile("Streak")
-        streak.show_value(f"{o.streak} day{'s' if o.streak != 1 else ''}",
-                          f"{o.chapters_read} of {len(o.chapters)} chapters read")
+        streak = StatTile(_("Streak"))
+        streak.show_value(plural(o.streak, "day"),
+                          _("{read} of {total} chapters read").format(
+                              read=o.chapters_read, total=len(o.chapters)))
         for i, tile in enumerate((countdown, work, known, streak)):
             tiles.addWidget(tile, 0, i)
             tiles.setColumnStretch(i, 1)
@@ -154,23 +161,24 @@ class OverviewView(Page):
         lower.setSpacing(16)
         left = QVBoxLayout()
         left.setSpacing(16)
-        history = Card("Last two weeks")
+        history = Card(_("Last two weeks"))
         chart = HistoryChart()
         chart.set_values([(short_day(d), n) for d, n in o.history])
         history.add(chart)
-        history.add(label(f"{sum(n for _d, n in o.history)} answers in 14 days", "hint"))
+        history.add(label(_("{answers} in 14 days").format(
+            answers=plural(sum(n for _d, n in o.history), "answer")), "hint"))
         left.addWidget(history)
-        tips = Card("How to use it")
-        tips.add(label("1. Read a chapter in the manual (Chapters → Open in manual).\n"
-                       "2. Go through its recap and self-check questions.\n"
-                       "3. Do your flashcards every day — a little, often.\n"
-                       "4. Before the day, drill multiple choice and skim the cheatsheet.",
+        tips = Card(_("How to use it"))
+        tips.add(label(_("1. Read a chapter in the manual (Chapters → Open in manual).\n"
+                         "2. Go through its recap and self-check questions.\n"
+                         "3. Do your flashcards every day — a little, often.\n"
+                         "4. Before the day, drill multiple choice and skim the cheatsheet."),
                        "muted", wrap=True))
         left.addWidget(tips)
         left.addStretch()
         lower.addLayout(left, 2)
 
-        chapters = Card("Chapters")
+        chapters = Card(_("Chapters"))
         rows = QWidget()
         col = QVBoxLayout(rows)
         col.setContentsMargins(0, 0, 0, 0)
@@ -180,8 +188,8 @@ class OverviewView(Page):
             row.clicked.connect(lambda _c=False, cid=chapter.id: self.chapterRequested.emit(cid))
             col.addWidget(row)
         if not o.chapters:
-            col.addWidget(label("This pack has no chapters — its cards are all loose. "
-                                "Add cards from the Practice page.", "hint", wrap=True))
+            col.addWidget(label(_("This pack has no chapters — its cards are all loose. "
+                                  "Add cards from the Practice page."), "hint", wrap=True))
         col.addStretch()
         chapters.add(scroll(rows), 1)
         lower.addWidget(chapters, 3)

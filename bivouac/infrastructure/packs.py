@@ -150,7 +150,8 @@ class JsonPackStore:
         except FileNotFoundError:
             raise NotFound("That study pack isn't there any more.") from None
         except (OSError, ValueError) as e:
-            raise FileFormatError(f"The pack {path.name} can't be read: {e}") from None
+            raise FileFormatError("The pack {name} can't be read: {reason}", name=path.name,
+                                  reason=str(e)) from None
         return replace(pack_from_dict(data, self._pdf(pack_id).is_file()), id=pack_id)
 
     def save(self, pack: Pack, source_pdf: str | None = None) -> Pack:
@@ -163,7 +164,7 @@ class JsonPackStore:
                            encoding="utf-8")
             tmp.replace(self._json(pack.id))
         except OSError as e:
-            raise FileAccessError(f"The pack couldn't be saved: {e.strerror or e}") from None
+            raise FileAccessError("The pack couldn't be saved: {reason}", reason=str(e.strerror or e)) from None
         return self.load(pack.id)
 
     def delete(self, pack_id: str) -> None:
@@ -178,10 +179,11 @@ class JsonPackStore:
         try:
             data = json.loads(Path(path).read_text(encoding="utf-8"))
         except OSError as e:
-            raise FileAccessError(f"{Path(path).name} can't be opened: {e.strerror or e}") from None
+            raise FileAccessError("{name} can't be opened: {reason}", name=Path(path).name,
+                                  reason=str(e.strerror or e)) from None
         except ValueError:
-            raise FileFormatError(f"{Path(path).name} isn't a study pack (not valid JSON).") \
-                from None
+            raise FileFormatError("{name} isn't a study pack (not valid JSON).",
+                                  name=Path(path).name) from None
         return pack_from_dict(data)
 
     def write_file(self, pack: Pack, path: str) -> None:
@@ -189,4 +191,4 @@ class JsonPackStore:
             Path(path).write_text(json.dumps(pack_to_dict(pack), ensure_ascii=False, indent=1),
                                   encoding="utf-8")
         except OSError as e:
-            raise FileAccessError(f"The pack couldn't be saved: {e.strerror or e}") from None
+            raise FileAccessError("The pack couldn't be saved: {reason}", reason=str(e.strerror or e)) from None

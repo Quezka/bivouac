@@ -50,7 +50,7 @@ class GitHubReleaseFeed:
             if e.code in (403, 429):
                 raise UpdateError("GitHub is limiting update checks right now: try again "
                                   "in an hour.") from e
-            raise UpdateError(f"GitHub answered with an error ({e.code}).") from e
+            raise UpdateError("GitHub answered with an error ({code}).", code=e.code) from e
         except (urllib.error.URLError, TimeoutError, OSError) as e:
             raise UpdateError("Can't reach GitHub to check for updates. Check your internet "
                               "connection.") from e
@@ -126,8 +126,8 @@ class DebInstaller:
             raise UpdateError("Installing was cancelled.")
         if result.returncode != 0:
             detail = (result.stderr or result.stdout or "").strip().splitlines()[-1:]
-            raise UpdateError("Installing the update failed" +
-                              (f": {detail[0]}" if detail else "."))
+            raise UpdateError("Installing the update failed: {detail}",
+                              detail=detail[0] if detail else "?")
         return False  # installed: restart to use it
 
 

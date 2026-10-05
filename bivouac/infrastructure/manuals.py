@@ -28,9 +28,10 @@ def pdf_text(path: str) -> str:
                               timeout=180, check=False,
                               creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except (OSError, subprocess.TimeoutExpired) as e:
-        raise FileAccessError(f"{Path(path).name} couldn't be read: {e}") from None
+        raise FileAccessError("{name} couldn't be read: {reason}", name=Path(path).name,
+                              reason=str(e)) from None
     if done.returncode != 0:
-        raise FileFormatError(f"{Path(path).name} isn't a readable PDF.")
+        raise FileFormatError("{name} isn't a readable PDF.", name=Path(path).name)
     return done.stdout.decode("utf-8", errors="replace")
 
 

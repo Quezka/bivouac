@@ -15,6 +15,7 @@ from .fit import clamp_window
 from . import theme
 from .common import confirm, error, logo_tile
 from .dialogs import AboutDialog, CardDialog, PackDialog, SettingsDialog
+from .i18n import N_, _, plural
 from .icons import APP_ICON, SCHOOL_EMBLEM
 from .views.chapters import ChaptersView
 from .views.digest import DigestView
@@ -47,7 +48,7 @@ class Sidebar(QFrame):
         self.pack_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.pack_button.setCursor(Qt.PointingHandCursor)
         theme.set_icon(self.pack_button, "flag", "flag", size=16)
-        self.pack_button.setToolTip("Switch study pack")
+        self.pack_button.setToolTip(_("Switch study pack"))
 
         self.nav = QVBoxLayout()
         self.nav.setSpacing(2)
@@ -103,9 +104,9 @@ class Sidebar(QFrame):
 
 
 class MainWindow(QMainWindow):
-    PAGES = [("home", "Overview"), ("book", "Chapters"), ("list", "Digest"),
-             ("cards", "Practice"), ("file-text", "Glossary"), ("terminal", "Cheatsheet"),
-             ("layers", "Manual")]
+    PAGES = [("home", N_("Overview")), ("book", N_("Chapters")), ("list", N_("Digest")),
+             ("cards", N_("Practice")), ("file-text", N_("Glossary")),
+             ("terminal", N_("Cheatsheet")), ("layers", N_("Manual"))]
     CHAPTERS, DIGEST, PRACTICE, MANUAL = 1, 2, 3, 6
 
     def __init__(self, services: Services):
@@ -130,13 +131,13 @@ class MainWindow(QMainWindow):
         self.nav_buttons = []
         for i, (page, (icon_name, text)) in enumerate(zip(self.pages, self.PAGES)):
             self.stack.addWidget(page)
-            self.nav_buttons.append(self.sidebar.add_page(icon_name, text, f"Ctrl+{i + 1}"))
+            self.nav_buttons.append(self.sidebar.add_page(icon_name, _(text), f"Ctrl+{i + 1}"))
             self._shortcut(f"Ctrl+{i + 1}", lambda i=i: self.show_page(i))
         self.sidebar.group.idClicked.connect(self.show_page)
         self.sidebar.set_branding(services.library.branding())
         self.updater = UpdateChecker(services, self)  # not `update`: that's QWidget's
 
-        more = self.sidebar.nav_button("more", "More", checkable=False)
+        more = self.sidebar.nav_button("more", _("More"), checkable=False)
         more.setPopupMode(QToolButton.InstantPopup)
         more.setMenu(self._more_menu())
         self.sidebar.footer.addWidget(more)
@@ -172,7 +173,7 @@ class MainWindow(QMainWindow):
     def load_pack(self):
         pack = self.services.library.active()
         self.pack_id = pack.id if pack else None
-        self.sidebar.pack_button.setText(f" {pack.title}" if pack else " No pack yet")
+        self.sidebar.pack_button.setText(f" {pack.title}" if pack else " " + _("No pack yet"))
         self.sidebar.pack_button.setMenu(self._pack_menu())
         for i in range(1, len(self.pages)):
             self.nav_buttons[i].setEnabled(pack is not None)
@@ -191,8 +192,8 @@ class MainWindow(QMainWindow):
             action.setChecked(p.id == self.pack_id)
         if menu.actions():
             menu.addSeparator()
-        menu.addAction("Import manual or pack…", self.import_file)
-        menu.addAction("New empty pack…", self.new_pack)
+        menu.addAction(_("Import manual or pack…"), self.import_file)
+        menu.addAction(_("New empty pack…"), self.new_pack)
         return menu
 
     def switch_pack(self, pack_id: str):
@@ -201,8 +202,10 @@ class MainWindow(QMainWindow):
 
     def import_file(self):
         path, _f = QFileDialog.getOpenFileName(
-            self, "Import a manual or a study pack", QSettings().value("import/dir", ""),
-            "Manuals and packs (*.pdf *.json);;Competition manual (*.pdf);;Study pack (*.json)")
+            self, _("Import a manual or a study pack"), QSettings().value("import/dir", ""),
+            ";;".join([_("Manuals and packs") + " (*.pdf *.json)",
+                       _("Competition manual") + " (*.pdf)",
+                       _("Study pack") + " (*.json)"]))
         if not path:
             return
         from pathlib import Path
@@ -212,15 +215,18 @@ class MainWindow(QMainWindow):
             pack = self.services.library.import_file(path)
         except ApplicationError as e:
             QApplication.restoreOverrideCursor()
-            error(self, e, "Couldn't import that")
+            error(self, e, _("Couldn't import that"))
             return
         QApplication.restoreOverrideCursor()
         self.load_pack()
         self.show_page(0)
         QMessageBox.information(
-            self, "Pack ready", f"{pack.title}: {pack.chapter_count} chapters and "
-                                f"{pack.card_count} cards.\n\nSet the competition date in "
-                                "More → Edit pack details to get a countdown.")
+            self, _("Pack ready"),
+            _("{title}: {chapters} and {cards}.").format(
+                title=pack.title, chapters=plural(pack.chapter_count, "chapter"),
+                cards=plural(pack.card_count, "card"))
+            + "\n\n" + _("Set the competition date in More → Edit pack details to get a "
+                          "countdown."))
 
     def new_pack(self):
         dialog = PackDialog(self.services, parent=self)
@@ -234,7 +240,7 @@ class MainWindow(QMainWindow):
             self.load_pack()
 
     def attach_source(self):
-        path, _f = QFileDialog.getOpenFileName(self, "The pack's original PDF", "",
+        path, _f = QFileDialog.getOpenFileName(self, _("The pack's original PDF"), "",
                                                "PDF (*.pdf)")
         if path and self.pack_id:
             try:
@@ -246,8 +252,9 @@ class MainWindow(QMainWindow):
     def export_pack(self):
         if not self.pack_id:
             return
-        path, _f = QFileDialog.getSaveFileName(self, "Export study pack",
-                                               f"{self.pack_id}.json", "Study pack (*.json)")
+        path, _f = QFileDialog.getSaveFileName(self, _("Export study pack"),
+                                               f"{self.pack_id}.json",
+                                               _("Study pack") + " (*.json)")
         if path:
             try:
                 self.services.library.export(self.pack_id, path)
@@ -256,17 +263,18 @@ class MainWindow(QMainWindow):
 
     def delete_pack(self):
         pack = self.services.library.active()
-        if pack and confirm(self, "Delete pack",
-                            f"Delete “{pack.title}”, your own cards in it and all its progress? "
-                            "This can't be undone."):
+        if pack and confirm(self, _("Delete pack"),
+                            _("Delete “{title}”, your own cards in it and all its progress? "
+                              "This can't be undone.").format(title=pack.title)):
             self.services.library.delete(pack.id)
             self.load_pack()
 
     def reset_progress(self):
         pack = self.services.library.active()
-        if pack and confirm(self, "Reset progress",
-                            f"Forget every answer and chapter read in “{pack.title}”? "
-                            "The cards themselves stay.", "Reset"):
+        if pack and confirm(self, _("Reset progress"),
+                            _("Forget every answer and chapter read in “{title}”? "
+                              "The cards themselves stay.").format(title=pack.title),
+                            _("Reset")):
             self.services.study.reset_progress(pack.id)
             self.load_pack()
 
@@ -319,22 +327,23 @@ class MainWindow(QMainWindow):
         menu = QMenu(self)
         self.pack_actions = []
         entries = [
-            ("Import manual or pack…", "Ctrl+O", self.import_file, False),
-            ("New empty pack…", None, self.new_pack, False),
-            ("Edit pack details…", "Ctrl+E", self.edit_pack, True),
-            ("Add a card…", "Ctrl+Shift+N", lambda: self.add_card(""), True),
-            ("Attach original PDF…", None, self.attach_source, True),
-            ("Export pack…", None, self.export_pack, True),
+            (_("Import manual or pack…"), "Ctrl+O", self.import_file, False),
+            (_("New empty pack…"), None, self.new_pack, False),
+            (_("Edit pack details…"), "Ctrl+E", self.edit_pack, True),
+            (_("Add a card…"), "Ctrl+Shift+N", lambda: self.add_card(""), True),
+            (_("Attach original PDF…"), None, self.attach_source, True),
+            (_("Export pack…"), None, self.export_pack, True),
             None,
-            ("Reset progress…", None, self.reset_progress, True),
-            ("Delete pack…", None, self.delete_pack, True),
+            (_("Reset progress…"), None, self.reset_progress, True),
+            (_("Delete pack…"), None, self.delete_pack, True),
             None,
-            ("Settings…", "Ctrl+,", self.open_settings, False),
-            ("Check for updates…", None, lambda: self.updater.check_now(), False),
-            ("Keyboard shortcuts", None, self.show_shortcuts, False),
-            (f"About {APP_NAME}", None, lambda: AboutDialog(self.services, self).exec(), False),
+            (_("Settings…"), "Ctrl+,", self.open_settings, False),
+            (_("Check for updates…"), None, lambda: self.updater.check_now(), False),
+            (_("Keyboard shortcuts"), None, self.show_shortcuts, False),
+            (_("About {app}").format(app=APP_NAME), None,
+             lambda: AboutDialog(self.services, self).exec(), False),
             None,
-            (f"Quit {APP_NAME}", "Ctrl+Q", self.close, False),
+            (_("Quit {app}").format(app=APP_NAME), "Ctrl+Q", self.close, False),
         ]
         for entry in entries:
             if entry is None:
@@ -356,26 +365,26 @@ class MainWindow(QMainWindow):
             self.load_pack()
 
     def show_shortcuts(self):
-        QMessageBox.information(self, "Keyboard shortcuts", "\n".join([
-            "Ctrl+1 … Ctrl+7\tSwitch page",
-            "Ctrl+O\tImport a manual or pack",
-            "Ctrl+E\tEdit pack details",
-            "Ctrl+Shift+N\tAdd a card",
+        QMessageBox.information(self, _("Keyboard shortcuts"), "\n".join([
+            "Ctrl+1 … Ctrl+7\t" + _("Switch page"),
+            "Ctrl+O\t" + _("Import a manual or pack"),
+            "Ctrl+E\t" + _("Edit pack details"),
+            "Ctrl+Shift+N\t" + _("Add a card"),
             "",
-            "Flashcards",
-            "Space\tShow answer, then Good",
-            "1 2 3 4\tAgain · Hard · Good · Easy",
+            _("Flashcards"),
+            "Space\t" + _("Show answer, then Good"),
+            "1 2 3 4\t" + _("Again · Hard · Good · Easy"),
             "",
-            "Multiple choice",
-            "1 2 3 4\tPick an answer",
-            "Space\tNext question",
+            _("Multiple choice"),
+            "1 2 3 4\t" + _("Pick an answer"),
+            "Space\t" + _("Next question"),
             "",
-            "Chapters",
-            "R\tMark as read / unread",
-            "P\tPractise the chapter",
-            "O\tOpen it in the manual",
+            _("Chapters"),
+            "R\t" + _("Mark as read / unread"),
+            "P\t" + _("Practise the chapter"),
+            "O\t" + _("Open it in the manual"),
             "",
-            "Ctrl+F\tSearch the glossary or cheatsheet",
+            "Ctrl+F\t" + _("Search the glossary or cheatsheet"),
         ]))
 
     def closeEvent(self, event):

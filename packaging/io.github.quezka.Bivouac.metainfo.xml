@@ -54,6 +54,11 @@
 
   <!-- Newest first. Every released version needs an entry; tests enforce it. -->
   <releases>
+    <release version="0.6.0" date="2026-10-05">
+      <description>
+        <p>The interface is translated into Italian and Russian, with a Language setting. Study content stays in the pack's language.</p>
+      </description>
+    </release>
     <release version="0.5.0" date="2026-10-02">
       <description>
         <p>Pressing Enter in a one-line box now finishes with it: the cursor stops blinking and the box lets go of the focus.</p>

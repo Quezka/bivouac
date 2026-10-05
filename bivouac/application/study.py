@@ -46,7 +46,7 @@ class StudyService:
         if scope.startswith(SCOPE_CHAPTER):
             chapter_id = scope.removeprefix(SCOPE_CHAPTER)
             if pack.chapter(chapter_id) is None:
-                raise NotFound(f"There's no chapter {chapter_id}.")
+                raise NotFound("There's no chapter {id}.", id=chapter_id)
             return [c for c in cards if c.chapter_id == chapter_id]
         return cards
 
@@ -119,7 +119,7 @@ class StudyService:
     def chapter(self, pack_id: str, chapter_id: str) -> ChapterRecord:
         found = next((c for c in self.chapters(pack_id) if c.id == chapter_id), None)
         if found is None:
-            raise NotFound(f"There's no chapter {chapter_id}.")
+            raise NotFound("There's no chapter {id}.", id=chapter_id)
         return found
 
     def digest(self, pack_id: str, query: str = "") -> DigestRecord:
@@ -146,7 +146,7 @@ class StudyService:
 
     def set_read(self, pack_id: str, chapter_id: str, read: bool) -> None:
         if self._load(pack_id).chapter(chapter_id) is None:
-            raise NotFound(f"There's no chapter {chapter_id}.")
+            raise NotFound("There's no chapter {id}.", id=chapter_id)
         self._progress.set_read(pack_id, chapter_id, read)
 
     # ---- flashcards ---------------------------------------------------------------

@@ -10,4 +10,4 @@ red `#aa0000`; emblem in `bivouac/assets/school.png`).
 - The venv has no pip of its own (no python3-venv on this machine): install with `../quire/.venv/bin/pip --python .venv/bin/python install …`.
 - A pack is one JSON file (format documented in `infrastructure/packs.py`) plus an optional `<id>.pdf`. Card ids derive from content (`k:<chapter>:<slug>`, `q:<chapter>:<n>`, `g:<slug>`, `u:<id>`) so re-importing a manual keeps progress.
 - `infrastructure/cybearly.py` parses `pdftotext -layout` output of the Cybearly "Campo base" manual. Tests use the made-up text in `tests/fakes.py`; **never commit real manual text or packs** (the manual is licensed to the school).
-- UI text is English only for now (no i18n yet); study content stays in the pack's language.
+- UI text: wrap in `_()`/`N_()`, add Russian and Italian to `presentation/locales/ru.py` and `it.py` (`tests/test_i18n.py`); study content stays in the pack's language. Errors raised by the application/infrastructure layers are English templates with keyword values (`NotFound("There's no chapter {id}.", id=...)`); the UI translates them with `common.error_text`. Never use `_` as a variable.

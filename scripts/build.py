@@ -153,6 +153,7 @@ def main():
         "--onefile" if args.onefile else "--onedir",
         "--icon", str(icon),
         "--add-data", f"{ASSETS}{os.pathsep}bivouac/assets",
+        "--collect-submodules", "bivouac.presentation.locales",  # i18n imports them by name
         "--paths", str(ROOT),
         "--distpath", str(ROOT / "dist"),
         "--workpath", str(BUILD / "pyinstaller"),

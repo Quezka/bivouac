@@ -121,7 +121,7 @@ def test_digest_lists_chapters_and_filters(window, pack):
     assert digest.subtitle.text() == "5 key terms in 2 chapters"
     digest.search.setText("injection")
     digest.refresh()
-    assert digest.subtitle.text() == "1 of 2 chapters match · 1 key terms"
+    assert digest.subtitle.text() == "1 of 2 chapters match · 1 key term"
     digest.search.setText("zzz")
     digest.refresh()
     digest.search.setText("")

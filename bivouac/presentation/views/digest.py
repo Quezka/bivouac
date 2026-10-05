@@ -11,6 +11,7 @@ from ...application.services import Services
 from .. import theme
 from ..common import Card, Page, Segmented, bullets_html, button, chip, clear, empty_state, \
     label, scroll
+from ..i18n import _, plural
 from .reference import search_box
 
 EVERYTHING, TAKEAWAYS, TERMS = range(3)
@@ -36,10 +37,10 @@ class DigestView(Page):
         self.services = services
         self.pack_id: str | None = None
         self.has_source = False
-        self.title.setText("Digest")
-        self.show_what = Segmented(["Everything", "Takeaways", "Key terms"])
+        self.title.setText(_("Digest"))
+        self.show_what = Segmented([_("Everything"), _("Takeaways"), _("Key terms")])
         self.show_what.changed.connect(lambda _i: self.refresh())
-        self.search = search_box("Search the whole manual  (Ctrl+F)")
+        self.search = search_box(_("Search the whole manual") + "  (Ctrl+F)")
         self.search.textChanged.connect(lambda _t: self._timer.start())
         self.add_actions(self.show_what, self.search)
         QShortcut(QKeySequence.Find, self, activated=self.search.setFocus,
@@ -65,17 +66,20 @@ class DigestView(Page):
         if digest is None or not digest.total_chapters:
             self.subtitle.setText("")
             self.body_layout.addWidget(empty_state(
-                "Nothing to skim", "This pack has no chapter recaps or key terms yet. "
-                                   "Packs made from a manual get one per chapter."), 1)
+                _("Nothing to skim"), _("This pack has no chapter recaps or key terms yet. "
+                                        "Packs made from a manual get one per chapter.")), 1)
             return
         shown = sum(len(c.concepts) for c in digest.chapters)
         self.subtitle.setText(
-            f"{digest.total_concepts} key terms in {digest.total_chapters} chapters"
+            _("{terms} in {chapters}").format(
+                terms=plural(digest.total_concepts, "key term"),
+                chapters=plural(digest.total_chapters, "chapter"))
             if not self.search.text() else
-            f"{len(digest.chapters)} of {digest.total_chapters} chapters match · "
-            f"{shown} key terms")
+            _("{matching} of {total} chapters match · {terms}").format(
+                matching=len(digest.chapters), total=digest.total_chapters,
+                terms=plural(shown, "key term")))
         if not digest.chapters:
-            self.body_layout.addWidget(empty_state("Nothing matches", "Try fewer words."), 1)
+            self.body_layout.addWidget(empty_state(_("Nothing matches"), _("Try fewer words.")), 1)
             return
         mode, part = self.show_what.index(), None
         for c in digest.chapters:
@@ -88,15 +92,15 @@ class DigestView(Page):
     def _chapter_card(self, c, mode: int) -> Card:
         card = Card(f"{c.id}   {c.title}")
         if c.read:
-            card.title_row.insertWidget(1, chip("✓ Read", "chipGood"))
+            card.title_row.insertWidget(1, chip("✓ " + _("Read"), "chipGood"))
         if self.has_source and c.page is not None:
             page = QPushButton(f"p. {c.page + 1}", objectName="icon")
-            page.setToolTip("Open the manual at this chapter")
+            page.setToolTip(_("Open the manual at this chapter"))
             page.setCursor(Qt.PointingHandCursor)
             page.clicked.connect(lambda _c=False, p=c.page: self.openPage.emit(p))
             card.title_row.addWidget(page)
-        more = button("Chapter")
-        more.setToolTip("Open the chapter: self-check questions, sections, practice")
+        more = button(_("Chapter"))
+        more.setToolTip(_("Open the chapter: self-check questions, sections, practice"))
         more.clicked.connect(lambda _c=False, cid=c.id: self.chapterRequested.emit(cid))
         card.title_row.addWidget(more)
         if c.takeaways and mode != TERMS:

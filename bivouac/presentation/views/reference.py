@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 from ...application.services import Services
 from .. import icons, theme
 from ..common import Card, Page, clear, empty_state, icon_button, label, scroll
+from ..i18n import _, plural
 
 
 def search_box(placeholder: str) -> QLineEdit:
@@ -29,8 +30,8 @@ class GlossaryView(Page):
         super().__init__(parent)
         self.services = services
         self.pack_id = None
-        self.title.setText("Glossary")
-        self.search = search_box("Search terms and definitions  (Ctrl+F)")
+        self.title.setText(_("Glossary"))
+        self.search = search_box(_("Search terms and definitions") + "  (Ctrl+F)")
         self.search.textChanged.connect(lambda _t: self._timer.start())
         self.add_actions(self.search)
         QShortcut(QKeySequence.Find, self, activated=self.search.setFocus,
@@ -53,8 +54,9 @@ class GlossaryView(Page):
             return
         terms = self.services.study.glossary(self.pack_id, self.search.text())
         total = len(self.services.study.glossary(self.pack_id))
-        self.subtitle.setText(f"{len(terms)} of {total} terms" if self.search.text() else
-                              f"{total} terms")
+        self.subtitle.setText(_("{matching} of {total} terms").format(
+            matching=len(terms), total=total) if self.search.text() else
+            plural(total, "term"))
         t = theme.current()
         parts, letter = [], None
         for term in terms:
@@ -68,8 +70,8 @@ class GlossaryView(Page):
                          f"</span></p>")
         if not terms:
             parts.append(f"<p style='color:{t.faint}'>" + (
-                "Nothing matches. Try fewer words." if total else
-                "This pack has no glossary.") + "</p>")
+                _("Nothing matches. Try fewer words.") if total else
+                _("This pack has no glossary.")) + "</p>")
         self.view.setHtml(f"<div style='color:{t.text}'>{''.join(parts)}</div>")
 
 
@@ -89,8 +91,8 @@ class CheatsheetView(Page):
         super().__init__(parent)
         self.services = services
         self.pack_id = None
-        self.title.setText("Cheatsheet")
-        self.search = search_box("Search commands, tools, flags  (Ctrl+F)")
+        self.title.setText(_("Cheatsheet"))
+        self.search = search_box(_("Search commands, tools, flags") + "  (Ctrl+F)")
         self.search.textChanged.connect(lambda _t: self._timer.start())
         self.add_actions(self.search)
         QShortcut(QKeySequence.Find, self, activated=self.search.setFocus,
@@ -110,12 +112,12 @@ class CheatsheetView(Page):
         clear(self.body_layout)
         groups = self.services.study.cheatsheet(self.pack_id, self.search.text()) \
             if self.pack_id else []
-        self.subtitle.setText(f"{len(groups)} groups · for labs and CTFs you're allowed to "
-                              "attack only")
+        self.subtitle.setText(_("{groups} · for labs and CTFs you're allowed to attack only")
+                              .format(groups=plural(len(groups), "group")))
         if not groups:
             self.body_layout.addWidget(empty_state(
-                "Nothing here", "Nothing matches your search." if self.search.text() else
-                "This pack has no cheatsheet."), 1)
+                _("Nothing here"), _("Nothing matches your search.") if self.search.text() else
+                _("This pack has no cheatsheet.")), 1)
             return
         section = None
         for g in groups:
@@ -124,7 +126,7 @@ class CheatsheetView(Page):
                 self.body_layout.addWidget(label(section.upper(), "partHeader"))
             card = Card(g.title)
             text = "\n".join(g.lines)
-            copy = icon_button("copy", "Copy all")
+            copy = icon_button("copy", _("Copy all"))
             copy.clicked.connect(lambda _c=False, t=text: QGuiApplication.clipboard().setText(t))
             card.title_row.addWidget(copy)
             card.add(CodeBlock(text))
@@ -140,7 +142,7 @@ class ManualView(Page):
         self.services = services
         self.pack_id = None
         self.path = None
-        self.title.setText("Manual")
+        self.title.setText(_("Manual"))
         self.doc = QPdfDocument(self)
         self.view = QPdfView()
         self.view.setDocument(self.doc)
@@ -151,14 +153,14 @@ class ManualView(Page):
         self.page.setKeyboardTracking(False)
         self.page.valueChanged.connect(lambda n: self.go(n - 1))
         self.view.pageNavigator().currentPageChanged.connect(self._sync_page)
-        zoom_out = icon_button("zoom-out", "Zoom out (Ctrl+-)")
-        zoom_in = icon_button("zoom-in", "Zoom in (Ctrl+=)")
-        fit = icon_button("fit-day", "Fit width (Ctrl+0)")
+        zoom_out = icon_button("zoom-out", _("Zoom out (Ctrl+-)"))
+        zoom_in = icon_button("zoom-in", _("Zoom in (Ctrl+=)"))
+        fit = icon_button("fit-day", _("Fit width (Ctrl+0)"))
         zoom_out.clicked.connect(lambda: self._zoom(1 / 1.2))
         zoom_in.clicked.connect(lambda: self._zoom(1.2))
         fit.clicked.connect(lambda: self.view.setZoomMode(QPdfView.ZoomMode.FitToWidth))
         self.of = label("", "muted")
-        self.add_actions(label("Page", "muted"), self.page, self.of, zoom_out, fit, zoom_in)
+        self.add_actions(label(_("Page"), "muted"), self.page, self.of, zoom_out, fit, zoom_in)
         for keys, slot in (("Ctrl+=", lambda: self._zoom(1.2)), ("Ctrl++", lambda: self._zoom(1.2)),
                            ("Ctrl+-", lambda: self._zoom(1 / 1.2)),
                            ("Ctrl+0", fit.click)):
@@ -167,9 +169,9 @@ class ManualView(Page):
         card = Card(padding=0)
         card.add(self.view)
         self.root.addWidget(card, 1)
-        self.missing = empty_state("No manual attached",
-                                   "Import a manual PDF, or attach one to this pack from "
-                                   "More → Attach original PDF…")
+        self.missing = empty_state(_("No manual attached"),
+                                   _("Import a manual PDF, or attach one to this pack from "
+                                     "More → Attach original PDF…"))
         self.root.addWidget(self.missing, 1)
         self.card = card
 
@@ -185,7 +187,7 @@ class ManualView(Page):
         self.card.setVisible(has)
         self.missing.setVisible(not has)
         self.page.setMaximum(max(1, self.doc.pageCount()))
-        self.of.setText(f"of {self.doc.pageCount()}")
+        self.of.setText(_("of {total}").format(total=self.doc.pageCount()))
         pack = self.services.library.active()
         self.subtitle.setText(pack.title if pack and has else "")
 

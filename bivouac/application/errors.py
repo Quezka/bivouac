@@ -2,7 +2,16 @@
 
 
 class ApplicationError(Exception):
-    """Something the user can understand and act on."""
+    """Something the user can understand and act on.
+
+    The message is English text with named placeholders, and the values go in as keywords:
+    `NotFound("There's no chapter {id}.", id=chapter_id)`. The UI translates `template`
+    and fills it in with `values`; `str(error)` is the English sentence."""
+
+    def __init__(self, message: str, **values):
+        super().__init__(message.format(**values) if values else message)
+        self.template = message
+        self.values = values
 
 
 class NotFound(ApplicationError):

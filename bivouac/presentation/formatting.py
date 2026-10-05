@@ -3,15 +3,13 @@ from __future__ import annotations
 
 from datetime import date
 
-MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August",
-          "September", "October", "November", "December")
-WEEKDAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+from . import i18n
 
 
 def fmt_date(d: date | None) -> str:
     if d is None:
         return ""
-    return f"{WEEKDAYS[d.weekday()]} {d.day} {MONTHS[d.month - 1]} {d.year}"
+    return f"{i18n.weekday_short(d)} {d.day} {i18n.month_of(d)} {d.year}"
 
 
 def short_day(d: date) -> str:

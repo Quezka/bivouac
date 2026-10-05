@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.0] - 2026-10-05
+
+- The interface is translated: Italian and Russian, with a Language setting (Italian systems start in Italian). Study content stays in the pack's language.
+- Fixed: a search in the Digest said "1 key terms".
+
 ## [0.5.0] - 2026-10-02
 
 - Pressing Enter in a one-line box now finishes with it: the cursor stops blinking and the box lets go of the focus.

@@ -13,6 +13,7 @@ from .. import theme
 from ..common import (
     Card, Page, bullets_html, button, chip, clear, empty_state, label, primary_button, scroll,
 )
+from ..i18n import _
 
 ID_ROLE = Qt.UserRole + 1
 
@@ -29,7 +30,7 @@ class QuestionBox(QWidget):
         q.setStyleSheet("font-weight: 600;")
         self.answer = label(answer, "muted", wrap=True)
         self.answer.hide()
-        self.toggle = QPushButton("Show answer", objectName="segment")
+        self.toggle = QPushButton(_("Show answer"), objectName="segment")
         self.toggle.setCursor(Qt.PointingHandCursor)
         self.toggle.clicked.connect(self._flip)
         row = QHBoxLayout()
@@ -42,7 +43,7 @@ class QuestionBox(QWidget):
     def _flip(self):
         shown = not self.answer.isVisible()
         self.answer.setVisible(shown)
-        self.toggle.setText("Hide answer" if shown else "Show answer")
+        self.toggle.setText(_("Hide answer") if shown else _("Show answer"))
 
 
 class ChaptersView(Page):
@@ -54,7 +55,7 @@ class ChaptersView(Page):
         self.services = services
         self.pack_id: str | None = None
         self.has_source = False
-        self.title.setText("Chapters")
+        self.title.setText(_("Chapters"))
 
         self.list = QListWidget()
         self.list.setMinimumWidth(270)
@@ -92,8 +93,8 @@ class ChaptersView(Page):
         chapters = self.services.study.chapters(self.pack_id) if self.pack_id else []
         pack = self.services.library.active() if self.pack_id else None
         self.has_source = bool(pack and pack.has_source)
-        self.subtitle.setText(f"{sum(c.read for c in chapters)} of {len(chapters)} read"
-                              if chapters else "")
+        self.subtitle.setText(_("{read} of {total} read").format(
+            read=sum(c.read for c in chapters), total=len(chapters)) if chapters else "")
         part = None
         select = None
         for c in chapters:
@@ -109,7 +110,7 @@ class ChaptersView(Page):
                 self.list.addItem(header)
             item = QListWidgetItem(f"{'✓' if c.read else '   '}  {c.id}   {c.title}")
             item.setData(ID_ROLE, c.id)
-            item.setToolTip(f"{c.known}/{c.cards} cards known")
+            item.setToolTip(_("{known}/{cards} cards known").format(known=c.known, cards=c.cards))
             self.list.addItem(item)
             if c.id == keep or select is None:
                 select = item
@@ -133,8 +134,8 @@ class ChaptersView(Page):
         clear(self.sheet_layout)
         if item is None or not item.data(ID_ROLE) or not self.pack_id:
             self.sheet_layout.addWidget(empty_state(
-                "No chapters", "This pack has no chapters. Packs made from a manual have one "
-                               "per chapter; your own packs can hold loose cards instead."), 1)
+                _("No chapters"), _("This pack has no chapters. Packs made from a manual have one "
+                                    "per chapter; your own packs can hold loose cards instead.")), 1)
             return
         c = self.services.study.chapter(self.pack_id, item.data(ID_ROLE))
         QSettings().setValue(f"chapter/{self.pack_id}", c.id)
@@ -144,13 +145,13 @@ class ChaptersView(Page):
         head.setSpacing(8)
         chips = QHBoxLayout()
         chips.setSpacing(6)
-        chips.addWidget(chip(f"Chapter {c.id}", "chipAccent"))
+        chips.addWidget(chip(_("Chapter {id}").format(id=c.id), "chipAccent"))
         if c.part:
             chips.addWidget(chip(c.part))
-        chips.addWidget(chip(f"{c.known}/{c.cards} cards known", "chipGood" if c.cards and
+        chips.addWidget(chip(_("{known}/{cards} cards known").format(known=c.known, cards=c.cards), "chipGood" if c.cards and
                              c.known == c.cards else "chip"))
         if c.read:
-            chips.addWidget(chip("✓ Read", "chipGood"))
+            chips.addWidget(chip("✓ " + _("Read"), "chipGood"))
         chips.addStretch()
         head.addLayout(chips)
         title = QLabel(c.title, objectName="sheetTitle", wordWrap=True)
@@ -159,17 +160,17 @@ class ChaptersView(Page):
             head.addWidget(label(c.blurb, "muted", wrap=True))
         actions = QHBoxLayout()
         actions.setSpacing(8)
-        practise = primary_button("Practise this chapter", "cards")
+        practise = primary_button(_("Practise this chapter"), "cards")
         practise.setToolTip("P")
         practise.clicked.connect(self._practise)
         practise.setEnabled(c.cards > 0)
         actions.addWidget(practise)
         if self.has_source and c.page is not None:
-            read = button("Open in manual", "book")
-            read.setToolTip(f"Page {c.page + 1}  (O)")
+            read = button(_("Open in manual"), "book")
+            read.setToolTip(_("Page {number}").format(number=c.page + 1) + "  (O)")
             read.clicked.connect(self._open_manual)
             actions.addWidget(read)
-        mark = button("Mark as unread" if c.read else "Mark as read", "check")
+        mark = button(_("Mark as unread") if c.read else _("Mark as read"), "check")
         mark.setToolTip("R")
         mark.clicked.connect(self._toggle_read)
         actions.addWidget(mark)
@@ -178,7 +179,7 @@ class ChaptersView(Page):
         self.sheet_layout.addLayout(head)
 
         if c.summary:
-            recap = Card("What you should take away")
+            recap = Card(_("What you should take away"))
             text = label("", "bullet", wrap=True)
             text.setTextFormat(Qt.RichText)
             text.setText(bullets_html(c.summary))
@@ -186,10 +187,10 @@ class ChaptersView(Page):
             self.sheet_layout.addWidget(recap)
 
         if c.concepts:
-            concepts = Card("Key concepts")
-            headers = list(c.concept_headers) or ["Term", "Meaning", "Example"]
+            concepts = Card(_("Key concepts"))
+            headers = list(c.concept_headers) or [_("Term"), _("Meaning"), _("Example")]
             columns = 3 if any(k.example for k in c.concepts) else 2
-            headers = (headers + ["Term", "Meaning", "Example"][len(headers):])[:columns]
+            headers = (headers + [_("Term"), _("Meaning"), _("Example")][len(headers):])[:columns]
             table = QTableWidget(len(c.concepts), columns, objectName="concepts")
             table.setHorizontalHeaderLabels(headers)
             table.verticalHeader().hide()
@@ -221,14 +222,14 @@ class ChaptersView(Page):
             self.sheet_layout.addWidget(concepts)
 
         if c.quiz:
-            quiz = Card("Check yourself")
-            quiz.add(label("Answer in your head (or out loud) before you peek.", "hint"))
+            quiz = Card(_("Check yourself"))
+            quiz.add(label(_("Answer in your head (or out loud) before you peek."), "hint"))
             for n, q in enumerate(c.quiz, start=1):
                 quiz.add(QuestionBox(n, q.question, q.answer))
             self.sheet_layout.addWidget(quiz)
 
         if c.sections:
-            sections = Card("In the manual")
+            sections = Card(_("In the manual"))
             for s in c.sections:
                 row = QPushButton(s.title + (f"   · p. {s.page + 1}" if s.page is not None else ""),
                                   objectName="icon")
@@ -239,12 +240,12 @@ class ChaptersView(Page):
                     row.clicked.connect(lambda _c=False, p=s.page: self.openPage.emit(p))
                 sections.add(row)
             if not self.has_source:
-                sections.add(label("Attach the original PDF (More → Attach original PDF…) "
-                                   "to jump straight to these pages.", "hint", wrap=True))
+                sections.add(label(_("Attach the original PDF (More → Attach original PDF…) "
+                                     "to jump straight to these pages."), "hint", wrap=True))
             self.sheet_layout.addWidget(sections)
 
         if c.resources:
-            res = Card("To go further")
+            res = Card(_("To go further"))
             text = label("", "muted", wrap=True)
             text.setTextFormat(Qt.RichText)
             text.setText(bullets_html(c.resources))
@@ -258,7 +259,7 @@ class ChaptersView(Page):
             height = table.horizontalHeader().height() + sum(
                 table.rowHeight(r) for r in range(table.rowCount())) + 4
             table.setFixedHeight(height)
-        table.horizontalHeader().sectionResized.connect(lambda *_: fit())
+        table.horizontalHeader().sectionResized.connect(lambda *_args: fit())
         fit()
 
     # ---- actions ------------------------------------------------------------------
