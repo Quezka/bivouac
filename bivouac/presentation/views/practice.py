@@ -336,7 +336,7 @@ class PracticeView(Page):
         for b in self.mode.group.buttons():
             b.setFocusPolicy(Qt.NoFocus)
         self.scope = QComboBox()
-        self.scope.setMinimumWidth(260)
+        self.scope.setMinimumWidth(221)
         self.scope.setMaximumWidth(380)
         self.scope.activated.connect(lambda _i: self.restart())
         self.scope.setFocusPolicy(Qt.ClickFocus)

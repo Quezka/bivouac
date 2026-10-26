@@ -19,7 +19,7 @@ from ..i18n import _, plural
 
 def search_box(placeholder: str) -> QLineEdit:
     box = QLineEdit(objectName="search", placeholderText=placeholder, clearButtonEnabled=True)
-    box.setMinimumWidth(300)
+    box.setMinimumWidth(255)
     action = box.addAction(icons.icon("search", theme.current().faint), QLineEdit.LeadingPosition)
     theme.themed(lambda t: action.setIcon(icons.icon("search", t.faint)))
     return box

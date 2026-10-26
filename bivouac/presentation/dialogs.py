@@ -41,7 +41,7 @@ class PackDialog(QDialog):
         self.pack = pack
         self.result_pack = None
         self.setWindowTitle(_("Edit pack") if pack else _("New study pack"))
-        self.setMinimumWidth(480)
+        self.setMinimumWidth(408)
         col = QVBoxLayout(self)
         col.setSpacing(12)
         self.name = QLineEdit(objectName="titleEdit", placeholderText=_("Pack name, e.g. OliCyber 2027"))
@@ -102,7 +102,7 @@ class CardDialog(QDialog):
         self.services = services
         self.pack_id = pack_id
         self.setWindowTitle(_("New card"))
-        self.setMinimumWidth(520)
+        self.setMinimumWidth(442)
         col = QVBoxLayout(self)
         col.setSpacing(10)
         self.front = QLineEdit(objectName="titleEdit",
@@ -145,7 +145,7 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.services = services
         self.setWindowTitle(_("Settings"))
-        self.setMinimumWidth(500)
+        self.setMinimumWidth(425)
         col = QVBoxLayout(self)
         col.setSpacing(14)
 

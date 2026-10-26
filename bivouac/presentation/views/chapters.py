@@ -58,7 +58,7 @@ class ChaptersView(Page):
         self.title.setText(_("Chapters"))
 
         self.list = QListWidget()
-        self.list.setMinimumWidth(270)
+        self.list.setMinimumWidth(230)
         self.list.currentItemChanged.connect(lambda item, _prev: self._show(item))
 
         self.sheet = QWidget()
