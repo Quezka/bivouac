@@ -24,6 +24,7 @@ PLURALS = {
 }
 
 MESSAGES = {
+    'High contrast (black and white, thick lines)': 'Высокая контрастность (чёрное и белое, толстые линии)',
     # ---- window, menus ---------------------------------------------------------------
     "Overview": "Обзор",
     "Chapters": "Главы",

@@ -23,6 +23,7 @@ PLURALS = {
 }
 
 MESSAGES = {
+    'High contrast (black and white, thick lines)': 'Alto contrasto (bianco e nero, linee spesse)',
     # ---- window, menus ---------------------------------------------------------------
     "Overview": "Panoramica",
     "Chapters": "Capitoli",
