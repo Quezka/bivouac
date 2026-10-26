@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.7.0] - 2026-10-26
+
+- The look now comes from the suite's shared toolkit (the school's blue and red kept): darker text and firmer borders, larger captions, High contrast mode, and an interface size that is a little larger by default.
+
 ## [0.6.0] - 2026-10-05
 
 - The interface is translated: Italian and Russian, with a Language setting (Italian systems start in Italian). Study content stays in the pack's language.
