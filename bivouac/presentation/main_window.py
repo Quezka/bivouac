@@ -104,7 +104,7 @@ class Sidebar(QFrame):
 
 
 class MainWindow(QMainWindow):
-    PAGES = [("home", N_("Overview")), ("book", N_("Chapters")), ("list", N_("Digest")),
+    PAGES = [("home", N_("Overview")), ("book-open", N_("Chapters")), ("list", N_("Digest")),
              ("cards", N_("Practice")), ("file-text", N_("Glossary")),
              ("terminal", N_("Cheatsheet")), ("layers", N_("Manual"))]
     CHAPTERS, DIGEST, PRACTICE, MANUAL = 1, 2, 3, 6

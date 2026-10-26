@@ -166,7 +166,7 @@ class ChaptersView(Page):
         practise.setEnabled(c.cards > 0)
         actions.addWidget(practise)
         if self.has_source and c.page is not None:
-            read = button(_("Open in manual"), "book")
+            read = button(_("Open in manual"), "book-open")
             read.setToolTip(_("Page {number}").format(number=c.page + 1) + "  (O)")
             read.clicked.connect(self._open_manual)
             actions.addWidget(read)
