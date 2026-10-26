@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.7.1] - 2026-10-26
+
+- The interface size set to Automatic is the system's own size again (100%); the shared toolkit had made it 115%, which was too big. Larger sizes stay one choice away in Settings.
+
 ## [0.7.0] - 2026-10-26
 
 - The look now comes from the suite's shared toolkit (the school's blue and red kept): darker text and firmer borders, larger captions, High contrast mode, and an interface size that is a little larger by default.
