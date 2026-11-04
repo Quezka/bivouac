@@ -152,6 +152,7 @@ def main():
         "--noupx",  # UPX-packed executables are a classic antivirus false positive
         "--onefile" if args.onefile else "--onedir",
         "--icon", str(icon),
+        "--collect-data", "quezka_ui",  # the suite's typeface
         "--add-data", f"{ASSETS}{os.pathsep}bivouac/assets",
         "--collect-submodules", "bivouac.presentation.locales",  # i18n imports them by name
         "--paths", str(ROOT),
