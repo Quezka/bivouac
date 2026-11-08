@@ -332,4 +332,13 @@ MESSAGES = {
     'You have the latest version of Bivouac ({version}).': 'У вас последняя версия Bivouac ({version}).',
     "You have {version}. Here's what's new:": 'У вас версия {version}. Что нового:',
     "Delete": "Удалить",
+    "Glass look": "Эффект стекла",
+    "Frosted, see-through surfaces over a soft wash of colour.": "Матовые полупрозрачные поверхности на мягком цветном фоне.",
+    "Study": "Учёба",
+    "New cards a day": "Новых карточек в день",
+    "Appearance": "Оформление",
+    "Updates": "Обновления",
+    "School": "Школа",
+    "Language": "Язык",
+    "Interface size": "Размер интерфейса",
 }

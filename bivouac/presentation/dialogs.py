@@ -7,8 +7,9 @@ from PySide6.QtCore import QDate, QSettings, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDateEdit, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
-    QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit, QPushButton, QSpinBox, QVBoxLayout,
+    QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit, QPushButton, QSpinBox, QVBoxLayout, QWidget,
 )
+from quezka_ui.settings import SettingsWindow
 
 from .. import APP_NAME, HOMEPAGE, __version__
 from ..application.errors import ApplicationError
@@ -140,75 +141,55 @@ class CardDialog(QDialog):
         super().accept()
 
 
-class SettingsDialog(QDialog):
+class SettingsDialog(SettingsWindow):
+    """Appearance, Study, School and Updates in the suite's Settings window. Study and School are saved on Close."""
+
     def __init__(self, services: Services, updater=None, parent=None):
-        super().__init__(parent)
+        super().__init__(_("Settings"), _("Close"), parent, width=860, height=600)
         self.services = services
-        self.setWindowTitle(_("Settings"))
-        self.setMinimumWidth(425)
-        col = QVBoxLayout(self)
-        col.setSpacing(14)
+        manager = theme.manager()
 
-        col.addWidget(QLabel(_("APPEARANCE"), objectName="tileCaption"))
+        look = self.section(_("Appearance"), "palette")
+        card = look.card()
         self.mode = Segmented([_("System"), _("Light"), _("Dark")])
-        self.mode.set_index(theme.MODES.index(theme.manager().mode))
+        self.mode.set_index(theme.MODES.index(manager.mode))
         self.mode.changed.connect(lambda i: theme.manager().set_mode(theme.MODES[i]))
-        col.addWidget(self.mode)
-
-        col.addWidget(QLabel(_("STUDY"), objectName="tileCaption"))
-        self.per_day = QSpinBox(minimum=0, maximum=500, suffix=" " + _("new cards a day"))
-        self.per_day.setValue(services.study.new_per_day())
-        col.addWidget(self.per_day)
-        col.addWidget(label(_("Fewer new cards means fewer reviews later. Around 20 a day "
-                            "gets through the Cybearly manual in about three weeks."),
-                            "hint", wrap=True))
-
-        col.addWidget(QLabel(_("INTERFACE SIZE"), objectName="tileCaption"))
-        self.scale = QComboBox()
-        for choice in uiscale.CHOICES:
-            self.scale.addItem(_("Automatic") if choice == "auto" else f"{choice}%", choice)
-        self.scale.setCurrentIndex(max(0, self.scale.findData(uiscale.chosen())))
-        self.scale.currentIndexChanged.connect(self._scale_changed)
-        col.addWidget(self.scale)
-        col.addWidget(label(_("Applies after a restart. Automatic makes everything a little "
-                            "smaller on small screens."), "hint", wrap=True))
-
-        col.addWidget(QLabel(_("LANGUAGE"), objectName="tileCaption"))
+        card.row(_("Appearance"), self.mode)
+        card.switch(_("Glass look"), manager.glass,
+                    _("Frosted, see-through surfaces over a soft wash of colour."), manager.set_glass)
+        card.switch(_("High contrast (black and white, thick lines)"), manager.contrast,
+                    on_toggled=manager.set_contrast)
+        card = look.card()
         self.language = QComboBox()
         for code, name in i18n.LANGUAGES:
             self.language.addItem(_(name) if code == "" else name, code)
         self.language.setCurrentIndex(max(0, self.language.findData(i18n.chosen_language())))
         self.language.currentIndexChanged.connect(self._language_changed)
-        col.addWidget(self.language)
-
+        card.row(_("Language"), self.language, stretch_control=True)
+        self.scale = QComboBox()
+        for choice in uiscale.CHOICES:
+            self.scale.addItem(_("Automatic") if choice == "auto" else f"{choice}%", choice)
+        self.scale.setCurrentIndex(max(0, self.scale.findData(uiscale.chosen())))
+        self.scale.currentIndexChanged.connect(self._scale_changed)
+        card.row(_("Interface size"), self.scale, _("Applies after a restart. Automatic makes everything a little "
+                                                   "smaller on small screens."), stretch_control=True)
         self.restart = button(_("Restart Bivouac now"))
         self.restart.hide()
         self.restart.clicked.connect(self._restart)
-        col.addWidget(self.restart)
+        card.wide(self.restart)
 
-        col.addWidget(QLabel(_("UPDATES"), objectName="tileCaption"))
-        auto = QCheckBox(_("Check for updates automatically"))
-        auto.setChecked(services.updates.auto_check())
-        auto.toggled.connect(services.updates.set_auto_check)
-        check = button(_("Check now"))
-        check.setEnabled(updater is not None)
-        if updater is not None:
-            check.clicked.connect(lambda: updater.check_now())
-        row = QHBoxLayout()
-        row.addWidget(auto)
-        row.addStretch()
-        row.addWidget(check)
-        col.addLayout(row)
-        col.addWidget(label(_("You have version {version}.").format(version=services.updates.current_version), "hint"))
+        study = self.section(_("Study"), "book")
+        self.per_day = QSpinBox(minimum=0, maximum=500, suffix=" " + _("new cards a day"))
+        self.per_day.setValue(services.study.new_per_day())
+        study.card().row(_("New cards a day"), self.per_day,
+                         _("Fewer new cards means fewer reviews later. Around 20 a day "
+                           "gets through the Cybearly manual in about three weeks."))
 
-        col.addWidget(QLabel(_("SCHOOL"), objectName="tileCaption"))
+        school = self.section(_("School"), "school")
         brand = services.library.branding()
         self.school = QLineEdit(brand.school)
         self.place = QLineEdit(brand.place)
         self.logo = brand.logo
-        form = QFormLayout()
-        form.addRow(_("Name"), self.school)
-        form.addRow(_("Town"), self.place)
         logo_row = QHBoxLayout()
         self.preview = QLabel()
         self._preview()
@@ -220,10 +201,22 @@ class SettingsDialog(QDialog):
         logo_row.addWidget(pick)
         logo_row.addWidget(reset)
         logo_row.addStretch()
-        form.addRow(_("Logo"), logo_row)
-        col.addLayout(form)
-        col.addWidget(_buttons(self))
-        scrollable(self)
+        card = school.card()
+        card.row(_("Name"), self.school, stretch_control=True)
+        card.row(_("Town"), self.place, stretch_control=True)
+        logo_box = QWidget()
+        logo_box.setLayout(logo_row)
+        card.row(_("Logo"), logo_box)
+
+        updates = self.section(_("Updates"), "download")
+        card = updates.card()
+        card.switch(_("Check for updates automatically"), services.updates.auto_check(),
+                    on_toggled=services.updates.set_auto_check)
+        check = button(_("Check now"))
+        check.setEnabled(updater is not None)
+        if updater is not None:
+            check.clicked.connect(lambda: updater.check_now())
+        card.row(_("You have version {version}.").format(version=services.updates.current_version), check)
 
     def _scale_changed(self):
         uiscale.set_chosen(self.scale.currentData())
