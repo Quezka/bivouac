@@ -23,13 +23,13 @@ from .views.overview import OverviewView
 from .views.practice import PracticeView
 from .updates_ui import UpdateChecker
 from .views.reference import CheatsheetView, GlossaryView, ManualView
+from quezka_ui.fit import fit_sidebar
 
 
 class Sidebar(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("sidebar")
-        self.setFixedWidth(195)
         self.group = QButtonGroup(self)
         self.group.setExclusive(True)
 
@@ -79,6 +79,8 @@ class Sidebar(QFrame):
         layout.addStretch()
         layout.addLayout(school)
         layout.addLayout(self.footer)
+
+        fit_sidebar(self, 195)
 
     def nav_button(self, icon_name: str, text: str, checkable: bool = True) -> QToolButton:
         button = QToolButton(objectName="nav", text=f"  {text}", checkable=checkable)
