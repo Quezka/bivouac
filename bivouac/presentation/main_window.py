@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from quezka_ui.pages import PageStack
 from PySide6.QtCore import QSettings, QSize, Qt
 from PySide6.QtGui import QAction, QIcon, QKeySequence
 from PySide6.QtWidgets import (
@@ -129,7 +130,7 @@ class MainWindow(QMainWindow):
                       self.cheatsheet, self.manual]
 
         self.sidebar = Sidebar()
-        self.stack = QStackedWidget()
+        self.stack = PageStack()  # split screen: page scrolls, window stays narrow
         self.nav_buttons = []
         for i, (page, (icon_name, text)) in enumerate(zip(self.pages, self.PAGES)):
             self.stack.addWidget(page)
